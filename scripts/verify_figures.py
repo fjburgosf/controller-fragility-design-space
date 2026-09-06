@@ -34,7 +34,7 @@ def en_texto(frag):
 
 
 print("=" * 100)
-print("FIGURA 4. PERCENTILES DE COLA POR FAMILIA Y NIVEL DE PERTURBACION")
+print("FIGURA 5. PERCENTILES DE COLA POR FAMILIA Y NIVEL DE PERTURBACION")
 print("=" * 100)
 e = pd.read_csv(ROOT / "results" / "processed" / "final_episodes.csv")
 e["fam"] = e.method.str.replace(r"_s\d+", "", regex=True)
@@ -60,10 +60,10 @@ en_texto("53.1 rad and deep deterministic policy gradient to\n4.9 rad")
 
 print()
 print("=" * 100)
-print("FIGURA 5. RESPUESTA TEMPORAL SOBRE UNA MISMA REALIZACION")
+print("FIGURA 6. RESPUESTA TEMPORAL SOBRE UNA MISMA REALIZACION")
 print("=" * 100)
 import importlib.util
-spec = importlib.util.spec_from_file_location("_f5", ROOT / "scripts" / "fig5_timeseries.py")
+spec = importlib.util.spec_from_file_location("_f5", ROOT / "scripts" / "fig6_timeseries.py")
 # reutilizar la funcion de trazado sin volver a dibujar seria fragil, asi que se
 # repite aqui el mismo calculo con las mismas constantes del modulo de evaluacion.
 from dataclasses import replace

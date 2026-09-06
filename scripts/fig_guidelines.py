@@ -39,13 +39,12 @@ a.text(np.sqrt(G1LO * G1HI), 0.45, "range the\nsampling rule\nrecommends",
 dentro = (g.dt >= G1LO) & (g.dt <= G1HI)
 a.semilogx(g.dt[~dentro], g.cae[~dentro], "o-", color=VERDE, ms=7, lw=1.8, label="outside the range")
 a.semilogx(g.dt[dentro], g.cae[dentro], "s", color=ROJO, ms=9, label="inside the range")
-for _, r in g.iterrows():
-    a.annotate(f"n={int(r['n'])}", (r["dt"], r["cae"]), textcoords="offset points",
-               xytext=(0, -13), ha="center", fontsize=6.2, color="0.35")
+# el recuento por punto se indica en el pie, no sobre los datos
 a.set_xlabel("sampling period $T_s$ [s]", fontsize=9)
 a.set_ylabel("pendulum fall rate", fontsize=9)
 a.set_title("(a) every configuration inside the\nrecommended band diverges", fontsize=9)
-a.set_ylim(-0.05, 1.08); a.grid(alpha=0.3, which="both"); a.legend(fontsize=7.5, loc="center left")
+a.set_ylim(-0.05, 1.22); a.grid(alpha=0.3, which="both")
+a.legend(fontsize=8, loc="lower left", framealpha=0.95)
 a.tick_params(labelsize=8)
 
 # ---- (b) horizonte ----

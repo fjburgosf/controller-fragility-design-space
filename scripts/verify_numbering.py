@@ -104,7 +104,7 @@ print("4. REFERENCIAS")
 print("=" * 100)
 cuerpo_fin = FIN.split("## 1. Introduction")[1].split("## References")[0]
 ref_cit = primera_aparicion(cuerpo_fin, r"\[\[(\d+)\]\(#ref\d+\)\]")
-entradas = [int(n) for n in re.findall(r'<a id="ref(\d+)">', FIN)]
+entradas = [int(n) for n in re.findall(r'\[\]\{#ref(\d+)\}', FIN)]
 chk("numeradas por orden de aparicion en el texto",
     ref_cit == list(range(1, len(ref_cit) + 1)),
     f"primeras apariciones {ref_cit[:10]} ... {ref_cit[-3:]}")
@@ -115,7 +115,7 @@ chk("cada cita tiene entrada", set(ref_cit) <= set(entradas),
 chk("ninguna entrada sin citar", set(entradas) <= set(ref_cit),
     "ninguna" if set(entradas) <= set(ref_cit) else f"{sorted(set(entradas)-set(ref_cit))}")
 enlaces = len(re.findall(r"\[\[\d+\]\(#ref\d+\)\]", FIN))
-anclas = len(re.findall(r'<a id="ref\d+">', FIN))
+anclas = len(re.findall(r'\[\]\{#ref\d+\}', FIN))
 chk("toda cita esta hipervinculada", enlaces >= len(set(ref_cit)),
     f"{enlaces} enlaces en el cuerpo, {anclas} anclas en la lista")
 

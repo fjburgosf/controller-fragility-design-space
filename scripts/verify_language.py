@@ -93,8 +93,8 @@ print()
 print("=" * 100)
 print("2. TEXTO VISIBLE DE LAS FIGURAS")
 print("=" * 100)
-GENERA = {1: "fig_guidelines.py", 2: "fig_design_space.py", 3: "fig_rl_fragility.py",
-          4: "fig4_tails.py", 5: "fig5_timeseries.py"}
+GENERA = {1: "fig_guidelines.py", 2: "fig_design_space.py", 3: "fig_design_space.py",
+          4: "fig_rl_fragility.py", 5: "fig5_tails.py", 6: "fig6_timeseries.py"}
 for num, script in sorted(GENERA.items()):
     arbol = ast.parse((ROOT / "scripts" / script).read_text(encoding="utf-8"))
     visibles = []

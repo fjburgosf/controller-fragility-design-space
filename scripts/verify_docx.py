@@ -21,7 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_docx import TABLAS, FIGURAS
 
-DOCX = ROOT / "paper" / "P2_manuscrito.docx"
+import os
+DOCX = ROOT / "paper" / os.environ.get("P2_DOCX", "P2_manuscrito.docx")
 SRC = (ROOT / "paper" / "manuscript_en_ieee.md").read_text(encoding="utf-8")
 FUENTE = (ROOT / "paper" / "manuscript_en.md").read_text(encoding="utf-8")
 NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"

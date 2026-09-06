@@ -27,7 +27,8 @@ PANDOC = Path(r"C:/Users/UNAL/AppData/Local/Pandoc/pandoc.exe")
 TAB = ROOT / "tables" / "P2"
 SRC = ROOT / "paper" / "manuscript_en_ieee.md"
 TMP = ROOT / "paper" / "_manuscrito_docx.md"
-OUT = ROOT / "paper" / "P2_manuscrito.docx"
+import os
+OUT = ROOT / "paper" / os.environ.get("P2_DOCX", "P2_manuscrito.docx")
 
 # tabla del manuscrito -> archivo generado, y su leyenda
 TABLAS = {
@@ -39,11 +40,22 @@ TABLAS = {
     6: ("p2_tabla6_coste", "Computational cost per control step and design freedom exposed."),
 }
 FIGURAS = {
-    1: ("fig1_guidelines.png", "Falsification of the two tuning rules over 176 configurations."),
-    2: ("fig2_design_space.png", "Design space of the predictive controller."),
-    3: ("fig3_rl_fragility.png", "Fragility of learned control across configuration, seeds and the training boundary."),
-    4: ("fig4_tails.png", "Distribution of angular error by family across the training boundary."),
-    5: ("fig5_timeseries.png", "Closed loop response of the four controllers on one shared realisation."),
+    1: ("fig1_guidelines.png",
+        "Falsification of the two tuning rules over 176 predictive controller configurations."),
+    2: ("fig2_map_riccati.png",
+        "Design space with the Riccati terminal weight. Cell values are the fraction of "
+        "realisations in which the pendulum was lost."),
+    3: ("fig3_map_stage.png",
+        "Design space with the stage terminal weight, on the same scale as Figure 2."),
+    4: ("fig4_rl_fragility.png",
+        "Fragility of learned control across configuration, seeds and the training boundary."),
+    5: ("fig5_tails.png",
+        "Distribution of angular error by controller family across the training boundary."),
+    6: ("fig6_timeseries.png",
+        ("Closed loop response of the four controllers on one shared realisation. "
+        "The angular error is wrapped to the interval from minus pi to pi, so a jump "
+        "between plus and minus three radians is the pendulum passing through the "
+        "hanging position rather than a discontinuity in the signal.")),
 }
 
 
@@ -64,10 +76,11 @@ def main() -> int:
 
     # ---- tablas. insertar tras el parrafo que las cita por primera vez ----
     n_tab = 0
-    for num, (slug, leyenda) in TABLAS.items():
+    for num, (slug, leyenda) in sorted(TABLAS.items(), reverse=True):
         if not (TAB / f"{slug}.md").exists():
             print(f"  aviso, falta {slug}.md"); continue
-        m = re.search(rf"(^.*?\bTable {num}\b.*?$)", t, re.M)
+        m = next((x for x in re.finditer(rf"(^.*?\bTable {num}\b.*?$)", t, re.M)
+                  if not x.group(0).lstrip().startswith("**Table")), None)
         if not m:
             print(f"  aviso, Table {num} no se cita"); continue
         bloque = f"\n\n**Table {num}.** {leyenda}\n\n{cuerpo_tabla(slug)}\n"
@@ -79,10 +92,11 @@ def main() -> int:
 
     # ---- figuras. insertar tras el parrafo que las cita ----
     n_fig = 0
-    for num, (arch, leyenda) in FIGURAS.items():
+    for num, (arch, leyenda) in sorted(FIGURAS.items(), reverse=True):
         if not (ROOT / "figures" / "P2" / arch).exists():
             print(f"  aviso, falta {arch}"); continue
-        m = re.search(rf"(^.*?\bFigure {num}\b.*?$)", t, re.M)
+        m = next((x for x in re.finditer(rf"(^.*?\bFigure {num}\b.*?$)", t, re.M)
+                  if not x.group(0).lstrip().startswith("**Figure")), None)
         if not m:
             print(f"  aviso, Figure {num} no se cita"); continue
         fin = m.end()

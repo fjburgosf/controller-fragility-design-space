@@ -1,4 +1,4 @@
-"""Figura 4. Distribucion de colas del error angular a traves de la frontera.
+"""Figura 5. Distribucion de colas del error angular a traves de la frontera.
 
 Una media oculta exactamente los episodios que importan en un sistema inestable.
 Esta figura muestra la distribucion completa por familia y nivel de perturbacion,
@@ -38,7 +38,8 @@ for j, dv in enumerate(DVS):
         parche.set_facecolor(COL[fam]); parche.set_alpha(0.55); parche.set_edgecolor("black")
     for i, fam in enumerate(etiq):
         s = e[(e.dv == dv) & (e.fam == fam)].rmse_theta.values
-        a.plot(i, np.percentile(s, 95), "_", color="black", ms=17, mew=2.1)
+        a.plot(i, np.percentile(s, 95), marker=6, color="#212121", ms=11, mew=1.6,
+               ls="none", zorder=5)
     a.axhline(FALL, color="#B71C1C", ls="--", lw=1.4)
     if j == 0:
         a.text(3.35, FALL * 1.25, "fall threshold", fontsize=6.8, color="#B71C1C",
@@ -51,12 +52,12 @@ for j, dv in enumerate(DVS):
     a.grid(axis="y", alpha=0.3, which="both"); a.tick_params(labelsize=8)
 ax[0].set_ylabel("RMSE $\\theta$ [rad], log scale", fontsize=9)
 
-fig.suptitle("Distribution of angular error by family. The dash marks the ninety fifth percentile "
-             "and the dashed line the fall threshold", fontsize=10, y=1.03)
+fig.suptitle("Distribution of angular error by family. The triangle marks the ninety fifth "
+             "percentile and the dashed line the fall threshold", fontsize=10, y=1.03)
 fig.tight_layout()
 for ext in ("png", "pdf"):
-    fig.savefig(FIG / f"fig4_tails.{ext}", bbox_inches="tight", dpi=600)
-print("fig4_tails guardada")
+    fig.savefig(FIG / f"fig5_tails.{ext}", bbox_inches="tight", dpi=600)
+print("fig5_tails guardada")
 for dv in DVS:
     fila = " | ".join(
         f"{f} p95 {np.percentile(e[(e.dv==dv)&(e.fam==f)].rmse_theta,95):.3f}"

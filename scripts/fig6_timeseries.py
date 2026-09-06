@@ -1,4 +1,4 @@
-"""Figura 5. Respuesta temporal de las tres familias a un lado y otro de la frontera.
+"""Figura 6. Respuesta temporal de las tres familias a un lado y otro de la frontera.
 
 Misma realizacion para todas las familias, de modo que las diferencias sean del
 controlador y no del sorteo. Se muestran angulo, posicion del carro y accion de
@@ -84,15 +84,19 @@ ax[0, 0].set_ylabel("angular error [rad]", fontsize=9)
 ax[1, 0].set_ylabel("cart position [m]", fontsize=9)
 ax[2, 0].set_ylabel("control [V]", fontsize=9)
 ax[0, 0].legend(fontsize=8, ncol=4, loc="upper left")
-ax[0, 0].text(1.2, ax[0, 0].get_ylim()[1] * 0.55, "gust", fontsize=7.5, ha="center", color="0.35")
-ax[1, 0].text(5.6, RAIL * 1.12, "rail", fontsize=7, color="#B71C1C", ha="right")
+for c in range(2):
+    ax[0, c].text(1.2, 0.955, "gust", fontsize=8, ha="center", va="top",
+                  color="#37474F", weight="bold", transform=ax[0, c].get_xaxis_transform())
+for c in range(2):
+    ax[1, c].text(5.95, RAIL, "rail", fontsize=8, color="#B71C1C", ha="right",
+                  va="bottom", weight="bold")
 
 fig.suptitle("Closed loop response on the same realisation. Inside the training range the families "
              "agree, outside it they do not", fontsize=10.5, y=0.98)
 fig.tight_layout()
 for ext in ("png", "pdf"):
-    fig.savefig(FIG / f"fig5_timeseries.{ext}", bbox_inches="tight", dpi=600)
-print("fig5_timeseries guardada")
+    fig.savefig(FIG / f"fig6_timeseries.{ext}", bbox_inches="tight", dpi=600)
+print("fig6_timeseries guardada")
 for dv in (6.0, 8.0):
     for nom, ctrl in ctrls.items():
         _, th, cx, _ = traza(ctrl, dv, SEED)

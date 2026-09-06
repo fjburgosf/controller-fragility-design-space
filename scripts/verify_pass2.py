@@ -75,7 +75,7 @@ chk("60 % o mas de los ultimos 4 anos", rec / len(unicos) >= 0.60,
 chk("entre 15 y 50 referencias (Tecnura)", 15 <= len(unicos) <= 50, f"{len(unicos)}")
 
 nums_cuerpo = [int(n) for n in re.findall(r"\[\[(\d+)\]\(#ref\d+\)\]", FIN)]
-entradas = [int(n) for n in re.findall(r'<a id="ref(\d+)">', FIN)]
+entradas = [int(n) for n in re.findall(r'\[\]\{#ref(\d+)\}', FIN)]
 chk("numeracion del cuerpo empieza en 1 y es densa",
     sorted(set(nums_cuerpo)) == list(range(1, len(set(nums_cuerpo)) + 1)),
     f"{len(set(nums_cuerpo))} numeros distintos en el cuerpo")
@@ -125,7 +125,7 @@ dis = SRC.split("## 4. Discussion")[1].split("## 5. Conclusions")[0]
 con = SRC.split("## 5. Conclusions")[1].split("## Acknowledgements")[0]
 
 PROHIBIDAS = [
-    ("regulador sin frontera", r"has no such boundary|carries no such boundary"),
+    ("regulador sin frontera", r"has no such boundary|carries no such boundary|regulator carries none|carries none"),
     ("cruce no observado afirmado como cruce", r"the (two )?(trends|curves) cross\b"),
     ("colapso fisico de la semilla", r"collapses? by a factor of twelve"),
     ("primer estudio", r"\bthe first (open|study|work|reproducible)"),
