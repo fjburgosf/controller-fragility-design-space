@@ -1,4 +1,4 @@
-"""Figura 2 de P2. Falsacion de las dos reglas de sintonia sobre 176 configuraciones.
+"""Figura 1 de P2. Falsacion de las dos reglas de sintonia sobre la rejilla completa.
 
 Tres paneles.
  (a) tasa de caida por periodo de muestreo, marcando el rango que la regla
@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from igrrl.design_grid import cargar as cargar_espacio
 
 ROOT = Path(__file__).resolve().parent.parent
 FIG = ROOT / "figures" / "P2"; FIG.mkdir(parents=True, exist_ok=True)
@@ -23,10 +24,7 @@ TAU, LAM = 0.725, 4.596
 G1LO, G1HI, G2MIN = 0.10 * TAU, 0.25 * TAU, 4 * TAU
 ROJO, VERDE, GRIS = "#B71C1C", "#2E7D32", "#455A64"
 
-d = pd.concat([pd.read_csv(PR / f) for f in
-               ("mpc_guidelines_full.csv", "mpc_grid_g1_extra.csv", "mpc_grid_g2_extra.csv")],
-              ignore_index=True)
-d = d[d.ctrl == "MPC"]
+d = cargar_espacio()   # deduplicado y con la rejilla completa
 
 fig, ax = plt.subplots(1, 3, figsize=(12.2, 3.7))
 
@@ -76,7 +74,7 @@ a.set_ylabel("Hessian condition number", fontsize=9)
 a.set_title("(c) conditioning wall on an\nunstable plant", fontsize=9)
 a.grid(alpha=0.3, which="both"); a.legend(fontsize=7.5, loc="lower right"); a.tick_params(labelsize=8)
 
-fig.suptitle("Falsification of two model predictive control tuning rules over 176 configurations",
+fig.suptitle(f"Falsification of two model predictive control tuning rules over {len(d)} configurations",
              fontsize=10.5, y=1.02)
 fig.tight_layout()
 for ext in ("png", "pdf"):

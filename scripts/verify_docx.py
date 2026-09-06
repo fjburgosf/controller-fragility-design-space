@@ -183,7 +183,7 @@ pal_doc = len(limpia(TEXTO).split())
 chk("el docx no perdio texto de la fuente", pal_doc >= pal_src * 0.95,
     f"fuente {pal_src} palabras, docx {pal_doc}")
 PLANO = re.sub(r"\s+", " ", TEXTO)
-for frase in ("sixty eight configurations satisfying the horizon rule",
+for frase in ("ninety six configurations satisfying the horizon",
               "twenty five violating both rules survived every realisation",
               "11.378 ms in its slowest step",
               "2.079 m, about seven times that half length",

@@ -23,13 +23,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
+from igrrl.design_grid import cargar as cargar_espacio
 
 ROOT = Path(__file__).resolve().parent.parent
 FIG = ROOT / "figures" / "P2"; FIG.mkdir(parents=True, exist_ok=True)
-d = pd.concat([pd.read_csv(ROOT / "results" / "processed" / f) for f in
-               ("mpc_guidelines_full.csv", "mpc_grid_g1_extra.csv", "mpc_grid_g2_extra.csv")],
-              ignore_index=True)
-d = d[d.ctrl == "MPC"] if "ctrl" in d.columns else d
+d = cargar_espacio()   # deduplicado y con la rejilla completa
 
 TAU = 0.725
 G1LO, G1HI, G2MIN = 0.10 * TAU, 0.25 * TAU, 4 * TAU
@@ -50,9 +48,8 @@ def mapa(ax, bl, tm):
         for x in range(len(DTS)):
             v = M[y, x]
             if np.isnan(v):
-                ax.add_patch(Rectangle((x - .5, y - .5), 1, 1, facecolor="#ECEFF1",
-                                       edgecolor="white", lw=1.2, hatch="///"))
-                continue
+                # no deberia ocurrir: design_grid rechaza una rejilla incompleta
+                raise AssertionError(f"celda sin dato en dt={DTS[x]}, T_pred={TPS[y]}")
             ax.text(x, y, f"{v:.2f}", ha="center", va="center", fontsize=9.5,
                     weight="bold" if v == 0 else "normal",
                     color="white" if v > 0.62 or v < 0.10 else "#212121")
@@ -110,8 +107,6 @@ def construir(tm, numero, etiqueta):
     cb.set_label("pendulum fall rate", fontsize=10)
     cb.ax.tick_params(labelsize=9)
 
-    ax[0].text(-0.5, -0.30, "Hatched cells were not part of the grid.",
-               transform=ax[0].transAxes, fontsize=8.5, color="#546E7A", va="top")
     n = int((d[d.terminal == tm].fell_frac == 0).sum())
     fig.suptitle(f"Design space with the {etiqueta} terminal weight. "
                  f"{n} of {len(d[d.terminal == tm])} configurations never lose the pendulum",

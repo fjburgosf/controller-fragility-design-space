@@ -6,11 +6,11 @@ Notas de mantenimiento, porque cada una corresponde a un fallo real ya corregido
    español dentro de un texto en inglés es un defecto de envío.
 2. Las cadenas con LaTeX son CRUDAS. Sin la r inicial, "$\\tau$" se convierte en un
    tabulador literal seguido de "au", y el error es invisible al leer el CSV.
-3. La Tabla 2 se calcula sobre el espacio de diseño COMPLETO, las 176
-   configuraciones, porque su leyenda y el cuerpo del texto hablan de ese
-   conjunto. Las Tablas 3 y 4 restringen a la region de muestreo fino, tal como
-   el texto declara, y esa restriccion deja fuera por construccion las dos
-   rejillas ampliadas.
+3. La Tabla 2 se calcula sobre el espacio de diseño COMPLETO y DEDUPLICADO que
+   entrega igrrl.design_grid, porque su leyenda y el cuerpo del texto hablan de
+   ese conjunto. El recuento se toma del propio dato, nunca escrito a mano. Las
+   Tablas 3 y 4 restringen a la region de muestreo fino, tal como el texto
+   declara, y esa restriccion deja fuera por construccion las tres ampliaciones.
 """
 from pathlib import Path
 
@@ -21,6 +21,7 @@ from src.config import load_pendulum_params
 from src.controllers.lqr import LQRController
 from src.models.pendulum import equilibrium_up, linearize
 from igrrl.mpc_design import Q_P2, R_P2
+from igrrl.design_grid import cargar as cargar_espacio
 
 ROOT = Path(__file__).resolve().parent.parent
 PR = ROOT / "results" / "processed"
@@ -65,10 +66,7 @@ t1 = pd.DataFrame([
 save(t1, "p2_tabla1_planta", "Plant parameters and closed loop modal structure.")
 
 # --- Tabla 2: contraste de las guias sobre el espacio COMPLETO ---
-d = pd.concat([pd.read_csv(PR / f) for f in ("mpc_guidelines_full.csv",
-                                             "mpc_grid_g1_extra.csv",
-                                             "mpc_grid_g2_extra.csv")], ignore_index=True)
-d = d[d.ctrl == "MPC"]
+d = cargar_espacio()   # deduplicado y con la rejilla completa
 TAU = tau_lento
 rows = []
 for g, nm, rng in (("G1_ok", "G1 (sampling)", rf"$T_s \in [{0.10*TAU:.3f}, {0.25*TAU:.3f}]$ s"),
@@ -79,7 +77,7 @@ for g, nm, rng in (("G1_ok", "G1 (sampling)", rf"$T_s \in [{0.10*TAU:.3f}, {0.25
                      "Mean fall rate": f"{s.fell_frac.mean():.3f}",
                      "Configs with no falls": int((s.fell_frac == 0).sum())})
 save(pd.DataFrame(rows), "p2_tabla2_guias",
-     "Contrast of the two tuning rules over the full design space of 176 configurations.")
+     f"Contrast of the two tuning rules over the full design space of {len(d)} configurations.")
 
 # --- Tabla 3: jerarquia de variables de diseno, region de muestreo fino ---
 s = d[(d.dt <= 0.02) & (d.T_pred <= 1.5)]

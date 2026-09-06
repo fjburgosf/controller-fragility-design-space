@@ -41,7 +41,7 @@ TABLAS = {
 }
 FIGURAS = {
     1: ("fig1_guidelines.png",
-        "Falsification of the two tuning rules over 176 predictive controller configurations."),
+        "Falsification of the two tuning rules over the complete grid of 224 predictive controller configurations."),
     2: ("fig2_map_riccati.png",
         "Design space with the Riccati terminal weight. Cell values are the fraction of "
         "realisations in which the pendulum was lost."),

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from igrrl.design_grid import cargar as cargar_espacio
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 ROOT = Path(__file__).resolve().parent.parent
@@ -60,14 +61,11 @@ print()
 print("=" * 96)
 print("B. REJILLA DE DISENO")
 print("=" * 96)
-d = pd.concat([pd.read_csv(PR / f) for f in
-               ("mpc_guidelines_full.csv", "mpc_grid_g1_extra.csv", "mpc_grid_g2_extra.csv")],
-              ignore_index=True)
-d = d[d.ctrl == "MPC"]
-chk("176 configuraciones", 176, len(d), tol=0)
+d = cargar_espacio()   # deduplicado y con la rejilla completa
+chk("224 configuraciones, rejilla completa sin duplicados", 224, len(d), tol=0)
 g1 = d[d.G1_ok == 1]
 chk("4 valores de dt dentro de G1", 4, g1.dt.nunique(), tol=0)
-chk("64 configuraciones dentro de G1", 64, len(g1), tol=0)
+chk("112 configuraciones dentro de G1", 112, len(g1), tol=0)
 chk("todas dentro de G1 caen", 1.0, g1.fell_frac.min(), tol=0)
 chk("todas dentro de G1 divergen", 1.0, g1.diverged_frac.min(), tol=0)
 for dt_, esp in ((0.005, 0.203), (0.010, 0.379), (0.020, 0.594)):
@@ -77,7 +75,7 @@ for dt_, esp in ((0.005, 0.203), (0.010, 0.379), (0.020, 0.594)):
     chk(f"caida media a dt={dt_}", esp, base[base.dt == dt_].fell_frac.mean(), tol=0.005)
 g2 = d[d.G2_ok == 1]
 chk("3 horizontes cumplen G2", 3, g2.T_pred.nunique(), tol=0)
-chk("68 configuraciones cumplen G2", 68, len(g2), tol=0)
+chk("96 configuraciones cumplen G2", 96, len(g2), tol=0)
 chk("ninguna que cumple G2 sobrevive", 0, int((g2.fell_frac == 0).sum()), tol=0)
 extra2 = pd.read_csv(PR / "mpc_grid_g2_extra.csv"); extra2 = extra2[extra2.ctrl == "MPC"]
 chk("caida 0.776 a T=2.2", 0.776, extra2[extra2.T_pred == 2.2].fell_frac.mean(), tol=0.005)
