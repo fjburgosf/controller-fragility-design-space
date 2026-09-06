@@ -1,0 +1,117 @@
+"""Construye el docx de Tecnura desde el manuscrito, con tablas y ecuaciones numeradas.
+
+Resuelve dos cosas que la conversion directa pierde.
+
+1. Las tablas se citan en el texto pero viven en tables/P2. Aqui se insertan como
+   tablas de Markdown justo despues del parrafo que las cita por primera vez, de
+   modo que pandoc las convierte en tablas nativas de Word.
+
+2. Word no entiende \\tag de LaTeX, asi que el numero de ecuacion se pierde. Se
+   sustituye por una tabla de una fila y dos columnas sin bordes, con la ecuacion
+   centrada y el numero alineado a la derecha entre parentesis, que es lo que pide
+   la revista. La ecuacion sigue siendo OMML nativo.
+
+Uso. python scripts/build_docx.py
+"""
+from __future__ import annotations
+
+import re
+import subprocess
+import sys
+import zipfile
+from pathlib import Path
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+ROOT = Path(__file__).resolve().parent.parent
+PANDOC = Path(r"C:/Users/UNAL/AppData/Local/Pandoc/pandoc.exe")
+TAB = ROOT / "tables" / "P2"
+SRC = ROOT / "paper" / "manuscript_en_ieee.md"
+TMP = ROOT / "paper" / "_manuscrito_docx.md"
+OUT = ROOT / "paper" / "P2_manuscrito.docx"
+
+# tabla del manuscrito -> archivo generado, y su leyenda
+TABLAS = {
+    1: ("p2_tabla1_planta", "Plant parameters and closed loop modal structure."),
+    2: ("p2_tabla2_guias", "Contrast of the two tuning rules over the full design space."),
+    3: ("p2_tabla3_jerarquia", "Ranking of the design variables of the predictive controller."),
+    4: ("p2_tabla4_interaccion", "Interaction between prediction horizon and terminal weight."),
+    5: ("p2_tabla5_comparacion_final", "Final comparison of the three controller families."),
+    6: ("p2_tabla6_coste", "Computational cost per control step and design freedom exposed."),
+}
+FIGURAS = {
+    1: ("fig1_guidelines.png", "Falsification of the two tuning rules over 176 configurations."),
+    2: ("fig2_design_space.png", "Design space of the predictive controller."),
+    3: ("fig3_rl_fragility.png", "Fragility of learned control across configuration, seeds and the training boundary."),
+    4: ("fig4_tails.png", "Distribution of angular error by family across the training boundary."),
+    5: ("fig5_timeseries.png", "Closed loop response of the four controllers on one shared realisation."),
+}
+
+
+def cuerpo_tabla(slug: str) -> str:
+    """Devuelve solo la tabla Markdown del archivo generado, sin la leyenda."""
+    md = (TAB / f"{slug}.md").read_text(encoding="utf-8")
+    return "\n".join(l for l in md.split("\n") if l.strip().startswith("|")).strip()
+
+
+def main() -> int:
+    t = SRC.read_text(encoding="utf-8")
+
+    # ---- ecuaciones. \tag{n} -> tabla sin bordes con el numero a la derecha ----
+    def eq(m):
+        cuerpo, n = m.group(1).strip(), m.group(2)
+        return (f"\n|  |  |\n|:--:|--:|\n| ${cuerpo}$ | ({n}) |\n")
+    t, n_eq = re.subn(r"\$\$\s*(.*?)\s*\\tag\{(\d+)\}\s*\$\$", eq, t, flags=re.S)
+
+    # ---- tablas. insertar tras el parrafo que las cita por primera vez ----
+    n_tab = 0
+    for num, (slug, leyenda) in TABLAS.items():
+        if not (TAB / f"{slug}.md").exists():
+            print(f"  aviso, falta {slug}.md"); continue
+        m = re.search(rf"(^.*?\bTable {num}\b.*?$)", t, re.M)
+        if not m:
+            print(f"  aviso, Table {num} no se cita"); continue
+        bloque = f"\n\n**Table {num}.** {leyenda}\n\n{cuerpo_tabla(slug)}\n"
+        fin = m.end()
+        while fin < len(t) and t[fin:fin + 2] != "\n\n":
+            fin += 1
+        t = t[:fin] + bloque + t[fin:]
+        n_tab += 1
+
+    # ---- figuras. insertar tras el parrafo que las cita ----
+    n_fig = 0
+    for num, (arch, leyenda) in FIGURAS.items():
+        if not (ROOT / "figures" / "P2" / arch).exists():
+            print(f"  aviso, falta {arch}"); continue
+        m = re.search(rf"(^.*?\bFigure {num}\b.*?$)", t, re.M)
+        if not m:
+            print(f"  aviso, Figure {num} no se cita"); continue
+        fin = m.end()
+        while fin < len(t) and t[fin:fin + 2] != "\n\n":
+            fin += 1
+        t = t[:fin] + f"\n\n![**Figure {num}.** {leyenda}](../figures/P2/{arch})\n" + t[fin:]
+        n_fig += 1
+
+    TMP.write_text(t, encoding="utf-8")
+    cmd = [str(PANDOC), str(TMP), "-o", str(OUT),
+           "--from", "markdown+tex_math_dollars+pipe_tables+yaml_metadata_block+raw_html",
+           "--to", "docx", "--metadata", "lang=en", "--resource-path", str(ROOT / "paper")]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode:
+        print("pandoc fallo\n", r.stderr[:900]); return 1
+
+    z = zipfile.ZipFile(OUT); x = z.read("word/document.xml").decode("utf-8")
+    print(f"\n{OUT.name}  {OUT.stat().st_size} bytes")
+    print(f"  ecuaciones insertadas    {n_eq}")
+    print(f"  tablas insertadas        {n_tab}")
+    print(f"  figuras insertadas       {n_fig}")
+    print("  --- verificacion del docx ---")
+    print(f"  OMML <m:oMath>           {len(re.findall('<m:oMath[ >]', x))}")
+    print(f"  tablas nativas <w:tbl>   {len(re.findall('<w:tbl>', x))}")
+    print(f"  imagenes <a:blip>        {len(re.findall('<a:blip', x))}")
+    print(f"  hipervinculos            {len(re.findall('<w:hyperlink', x))}")
+    print(f"  restos de LaTeX sin convertir  tag {x.count('tag{')}  dollar {x.count('$$')}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

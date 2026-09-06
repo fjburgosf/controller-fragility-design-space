@@ -1,0 +1,20 @@
+# entorno
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# salidas de simulacion. Se regeneran ejecutando el pipeline
+results/
+figures/
+tables/
+paper/
+*.zip
+*.pkl
+*.npz
+*.log
+
+# sistema
+.DS_Store
+Thumbs.db
