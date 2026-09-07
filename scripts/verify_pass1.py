@@ -224,6 +224,50 @@ chk("a 8 V nadie pierde el pendulo", 0.0, _rc[_rc.dv == 8].fell_frac.max(), tol=
 
 print()
 print("=" * 96)
+print("J. AFIRMACIONES SURGIDAS DE LA REVISION EXHAUSTIVA")
+print("=" * 96)
+_fs = pd.read_csv(PR / "final_summary.csv")
+_fs["fam"] = _fs.method.str.replace(r"_s\d+", "", regex=True)
+
+# 3.6, la semilla del colapso aparente evaluada en la planta
+_s4 = _fs[_fs.method == "SAC_s4"]
+chk("SAC_s4 a 4 V, error angular 0.045", 0.045,
+    float(_s4[_s4.dv == 4.0].rmse_theta.iloc[0]), tol=5e-4)
+chk("SAC_s4 a 6 V, error angular 0.058", 0.058,
+    float(_s4[_s4.dv == 6.0].rmse_theta.iloc[0]), tol=5e-4)
+chk("SAC_s4 no pierde el pendulo dentro del rango", 0.0,
+    float(_s4[_s4.dv <= 6].fell_frac.max()), tol=0)
+
+# 3.7, el fallo a 10 V no es identico en las cuatro familias
+_g10 = _fs[_fs.dv == 10.0].groupby("fam").fell_frac.mean()
+for _f in ("LQR", "MPC", "SAC"):
+    chk(f"a 10 V {_f} cae en todas las realizaciones", 1.0, float(_g10[_f]), tol=0)
+chk("a 10 V DDPG cae en el 92 por ciento", 0.9167, float(_g10["DDPG"]), tol=5e-4)
+
+# 3.8, el margen del regulador frente al presupuesto de 10 ms
+_c6 = pd.read_csv(ROOT / "tables" / "P2" / "p2_tabla6_coste.csv").set_index("Controller")
+_peor_lqr = float(_c6.loc["LQR", "Max [ms]"])
+chk("peor paso del regulador 0.089 ms", 0.089, _peor_lqr, tol=5e-4)
+chk("mas de cien veces por debajo de 10 ms", 1.0, float(10.0 / _peor_lqr > 100), tol=0)
+chk("no llega a tres ordenes de magnitud", 1.0, float(10.0 / _peor_lqr < 1000), tol=0)
+
+# 4.7, cuantas semillas mejoran fisicamente con el checkpoint final
+_cc = pd.read_csv(PR / "checkpoint_comparison.csv")
+_piv = _cc.pivot_table(index=["algo", "seed"], columns="checkpoint", values="rmse_theta")
+_mejora = _piv["final"] < _piv["best"]
+chk("2 semillas de SAC mejoran con el final", 2,
+    int(_mejora.loc["SAC"].sum()), tol=0)
+chk("1 semilla de DDPG mejora con el final", 1,
+    int(_mejora.loc["DDPG"].sum()), tol=0)
+_s4b = _cc[(_cc.algo == "SAC") & (_cc.seed == 4)].set_index("checkpoint").rmse_theta
+chk("SAC_s4 best 0.0526 en la planta", 0.0526, float(_s4b["best"]), tol=5e-4)
+chk("SAC_s4 final 0.0532 en la planta", 0.0532, float(_s4b["final"]), tol=5e-4)
+chk("el colapso de retorno no se refleja en la planta", 1.0,
+    float(abs(_s4b["final"] - _s4b["best"]) / _s4b["best"] < 0.05), tol=0)
+
+
+print()
+print("=" * 96)
 print(f"RESUMEN PASADA 1   {len(OK)} verificadas   {len(MAL)} discrepancias")
 print("=" * 96)
 for n, det in MAL:

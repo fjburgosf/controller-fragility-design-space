@@ -1,8 +1,7 @@
-# Where controller fragility lives
+# Controller fragility design space
 
-Simulation code for the study *Where controller fragility lives. A design space
-study of optimal, predictive and learned control for an unstable underactuated
-plant*.
+Simulation code for the study *Design space analysis of predictive, optimal and
+learned control for an unstable underactuated plant*.
 
 Every number in the manuscript is produced by a script in this repository. No
 value was typed by hand: each table and each figure is generated from stored
@@ -14,7 +13,8 @@ the text directly from those results.
 A cart and pendulum plant whose closed loop modes differ by a factor near one
 hundred is simulated under parametric uncertainty and an unmeasured input
 disturbance. Two published tuning rules for predictive control are treated as
-falsifiable statements and tested over a design space of 176 configurations,
+falsifiable statements and tested over a complete design space of 224
+configurations,
 alongside a cost matched linear quadratic regulator and two learned agents
 trained with soft actor critic and deep deterministic policy gradient.
 
@@ -55,6 +55,8 @@ python scripts/grid_mpc_guidelines.py
 python scripts/train_standalone_matrix.py
 python scripts/evaluate_final.py
 python scripts/measure_cost.py
+python scripts/measure_conditioning.py
+python scripts/compare_checkpoints.py
 ```
 
 Tables and figures then rebuild in seconds from the stored results.
@@ -65,13 +67,13 @@ python scripts/tables_final.py
 python scripts/fig_guidelines.py
 python scripts/fig_design_space.py
 python scripts/fig_rl_fragility.py
-python scripts/fig4_tails.py
-python scripts/fig5_timeseries.py
+python scripts/fig5_tails.py
+python scripts/fig6_timeseries.py
 ```
 
 ## Verification
 
-Seven scripts check different surfaces of the work. Each reports how many checks
+Eight scripts check different surfaces of the work. Each reports how many checks
 passed and lists every discrepancy found.
 
 ```bash
@@ -79,6 +81,7 @@ python scripts/verify_controllers.py
 python scripts/verify_pass1.py
 python scripts/verify_pass2.py
 python scripts/verify_figures.py
+python scripts/verify_references.py
 python scripts/verify_numbering.py
 python scripts/verify_language.py
 python scripts/verify_docx.py
@@ -92,8 +95,10 @@ predictive matrices against a direct propagation of the same control sequence.
 source file. `verify_figures.py` recomputes the numbers attributed to each
 figure. `verify_numbering.py` checks that equations, tables, figures and
 references are numbered without gaps, cited in ascending order and cited at all.
-`verify_language.py` checks that every table cell and every figure label reaches
-the reader in English.
+`verify_references.py` resolves every cited digital object identifier against
+Crossref and compares the returned title and year with the stored record, so a
+fabricated or mistyped reference cannot survive. `verify_language.py` checks that
+every table cell and every figure label reaches the reader in English.
 
 ## Invariant tests
 

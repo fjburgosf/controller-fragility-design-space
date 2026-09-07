@@ -62,6 +62,14 @@ def main() -> int:
     texto = src.read_text(encoding="utf-8")
     refs = {r["doi"].lower(): r for r in
             json.loads((ROOT / "paper" / "refs_verified.json").read_text(encoding="utf-8"))}
+    # Crossref devuelve algunos titulos con marcado JATS crudo, etiquetas como
+    # <i> y <sub> y saltos de linea con sangria. Sin limpiarlos, la entrada sale
+    # partida en la lista de referencias y el lector ve la etiqueta HTML.
+    for r in refs.values():
+        for campo in ("title", "venue"):
+            if r.get(campo):
+                s = re.sub(r"<[^>]+>", "", str(r[campo]))
+                r[campo] = re.sub(r"\s+", " ", s).strip()
 
     orden, faltantes = [], []
     for m in re.finditer(r"\[\[([^\]]+)\]\]", texto):
