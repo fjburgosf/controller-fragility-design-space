@@ -96,7 +96,10 @@ print("=" * 94)
 print("C. RESOLUCION DE DOI EN CROSSREF")
 print("=" * 94)
 fallos_doi = []
-for i, d in enumerate(unicos):
+# una entrada sin DOI, como la documentacion de una herramienta, no vive en
+# Crossref. verify_references.py comprueba su localizador y fecha de consulta.
+con_doi = [d for d in unicos if d.startswith("10.")]
+for i, d in enumerate(con_doi):
     url = "https://api.crossref.org/works/" + urllib.parse.quote(d, safe="")
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "P2-verify (mailto:fjburgosf@unal.edu.co)"})
@@ -109,9 +112,9 @@ for i, d in enumerate(unicos):
     except Exception as e:
         fallos_doi.append((d, f"no resuelve, {e.__class__.__name__}"))
     if (i + 1) % 12 == 0:
-        print(f"      verificados {i+1} de {len(unicos)}", flush=True)
+        print(f"      verificados {i+1} de {len(con_doi)}", flush=True)
     time.sleep(0.12)
-chk("los 36 DOI resuelven en Crossref", not fallos_doi,
+chk(f"los {len(con_doi)} DOI resuelven en Crossref", not fallos_doi,
     "todos resuelven" if not fallos_doi else f"{len(fallos_doi)} fallos")
 for d, why in fallos_doi:
     print(f"        {d}  {why}")

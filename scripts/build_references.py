@@ -36,6 +36,17 @@ def ieee(r, n):
         partes = [f"{iniciales(a)} {apellido(a)}" for a in au]
         autores = ", ".join(partes[:-1]) + " and " + partes[-1]
     ven = f", *{r['venue']}*" if r["venue"] else ""
+    # Una entrada sin DOI se cierra con su localizador y la fecha de consulta, que
+    # es lo que pide IEEE para un recurso en linea. La documentacion de una
+    # herramienta comercial no tiene DOI y aun asi es la guia que un disenador
+    # consulta de verdad, de modo que debe poder citarse.
+    if r.get("url") and not str(r.get("doi", "")).startswith("10."):
+        acc = f" [Accessed {r['accessed']}]" if r.get("accessed") else ""
+        # sin autor personal, la organizacion emisora ocupa el lugar del autor y no
+        # se repite como publicacion, que es la forma IEEE para documentacion
+        cab = autores if autores else r["venue"]
+        med = ven if autores else ""
+        return f"[{n}] {cab}, {r['title']}{med}, {r['year']}. [Online]. Available {r['url']}{acc}"
     return f"[{n}] {autores}, {r['title']}{ven}, {r['year']}. doi {r['doi']}"
 
 

@@ -36,7 +36,7 @@ def chk(nombre, bien, det):
 
 texto = FUENTE.read_text(encoding="utf-8")
 citados = []
-for d in re.findall(r"\[\[(10\.[^\]]+)\]\]", texto):
+for d in re.findall(r"\[\[([^\]]+)\]\]", texto):
     if d not in citados:
         citados.append(d)
 almacen = {r["doi"].lower(): r for r in json.loads(ALMACEN.read_text(encoding="utf-8"))}
@@ -48,6 +48,11 @@ for i, d in enumerate(citados, 1):
     local = almacen.get(d.lower())
     if local is None:
         chk(f"{i:2}. {d}", False, "no esta en refs_verified.json")
+        continue
+    # una entrada sin DOI no vive en Crossref, se comprueba que traiga localizador
+    if not d.startswith("10."):
+        chk(f"{i:2}. {d[:40]}", bool(local.get("url")) and bool(local.get("accessed")),
+            f"recurso en linea, {local.get('url', 'SIN URL')[:52]}")
         continue
     try:
         req = urllib.request.Request(f"https://api.crossref.org/works/{d}",
@@ -77,8 +82,9 @@ lista = FINAL.read_text(encoding="utf-8").split("## References")[1]
 etiquetas = re.findall(r"<(?:i|b|sub|sup|em|strong|scp|mml:[a-z]+)[ >/]", lista)
 chk("sin etiquetas HTML o JATS en las entradas", not etiquetas,
     "ninguna" if not etiquetas else f"{len(etiquetas)} etiquetas: {sorted(set(etiquetas))}")
-partidas = [l for l in lista.split("\n") if l.startswith("[]{#ref") and "doi 10." not in l]
-chk("cada entrada termina en su doi", not partidas,
+partidas = [l for l in lista.splitlines() if l.startswith("[]{#ref")
+            and "doi 10." not in l and "[Online]. Available" not in l]
+chk("cada entrada cierra con doi o localizador en linea", not partidas,
     "todas" if not partidas else f"{len(partidas)} entradas truncadas")
 
 print()
