@@ -1,7 +1,10 @@
 """Entorno de control STANDALONE (no residual) para el estudio DRL vs clasico.
 
 Diferencias con ResidualBalanceEnv (que NO se modifica; 48 modelos dependen de el):
-  1. La accion mapea al control COMPLETO: u = actuator_limit * tanh(a).
+  1. La accion mapea LINEALMENTE al control COMPLETO:
+     u = actuator_limit * clip(a, -1, 1)   (ver env.step, linea del mapeo).
+     Antes usaba actuator_limit * tanh(a), que topaba en 12*tanh(1) = 9.14 V y
+     dejaba al agente con el 76% de la autoridad del actuador (bug corregido).
      No hay LQR base ni compuerta de autoridad.
   2. La recompensa NO lleva el termino de penalizacion del residuo. Ese termino
      favorecia estructuralmente al residuo cero (artefacto D23) y aqui no aplica.

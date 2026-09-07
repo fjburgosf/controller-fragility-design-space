@@ -150,6 +150,80 @@ for frase in ("the regulator does not, and the asymmetry",
 
 print()
 print("=" * 96)
+print("F. LA REGION QUE SOBREVIVE. ALCANCE EXACTO DE LA AFIRMACION DE LA SECCION 3.3")
+print("=" * 96)
+# Estas comprobaciones existen porque la primera redaccion decia que la region que
+# funciona "esta en el rincon", lo que se lee como si todo el rincon funcionase.
+# No es asi: el rincon es necesario y no suficiente.
+_s = d[d.fell_frac == 0]
+_r = d[(d.dt <= 0.02) & (d.T_pred <= 2.2)]
+chk("25 supervivientes", 25, len(_s), tol=0)
+chk("ningun superviviente pasa de dt=0.02", 0.02, _s.dt.max(), tol=0)
+chk("ningun superviviente pasa de T_pred=2.2", 2.2, _s.T_pred.max(), tol=0)
+chk("24 supervivientes con T_pred<=1.5", 24, int((_s.T_pred <= 1.5).sum()), tol=0)
+chk("una sola excepcion en T_pred=2.2", 1, int((_s.T_pred == 2.2).sum()), tol=0)
+chk("48 configuraciones en el rincon", 48, len(_r), tol=0)
+chk("23 del rincon NO sobreviven", 23, int((_r.fell_frac > 0).sum()), tol=0)
+chk("en el rincon, riccati salva 15", 15, int((_r[_r.terminal == "riccati"].fell_frac == 0).sum()), tol=0)
+chk("en el rincon, stage salva 10", 10, int((_r[_r.terminal == "stage"].fell_frac == 0).sum()), tol=0)
+chk("en el rincon, front salva 15", 15, int((_r[_r.blocking == "front"].fell_frac == 0).sum()), tol=0)
+chk("en el rincon, uniform salva 10", 10, int((_r[_r.blocking == "uniform"].fell_frac == 0).sum()), tol=0)
+chk("ningun superviviente cumple G1", 0, int((_s.G1_ok == 1).sum()), tol=0)
+chk("ningun superviviente cumple G2", 0, int((_s.G2_ok == 1).sum()), tol=0)
+
+
+print()
+print("=" * 96)
+print("G. CONDICIONAMIENTO Y ESTADO DEL SOLVER, DESDE LA MEDICION GUARDADA")
+print("=" * 96)
+# El manuscrito afirmaba que el solver devuelve soluciones inexactas. No era cierto,
+# y los condicionamientos citados estaban escritos a mano en un script de figura.
+# Ahora ambos salen de results/processed/mpc_conditioning.csv.
+_c = pd.read_csv(PR / "mpc_conditioning.csv").set_index("T_pred")
+chk("cond(H) a T_pred=0.4 es 2.3e2", 2.3e2, _c.loc[0.4, "cond_H"], tol=15)
+chk("cond(H) a T_pred=3.0 es 1.1e13", 1.1e13, _c.loc[3.0, "cond_H"], tol=6e11)
+chk("crecimiento cercano a once ordenes", 10.7,
+    float(np.log10(_c.loc[3.0, "cond_H"] / _c.loc[0.4, "cond_H"])), tol=0.15)
+chk("quedan unos tres digitos a T_pred=3.0", 3.0, _c.loc[3.0, "digitos_significativos"], tol=0.2)
+chk("el solver devuelve optimo en todas las llamadas", 1.0, _c.frac_optimo.min(), tol=0)
+chk("cero fallos de solver en toda la barrida", 0, int(_c.fallos_solver.sum()), tol=0)
+chk("600 llamadas por horizonte", 600, int(_c.llamadas.min()), tol=0)
+
+
+print()
+print("=" * 96)
+print("H. DIRECCION DE LAS CURVAS DE LA TABLA 4")
+print("=" * 96)
+# El texto decia que las curvas divergen. La brecha se estrecha de 0.615 a 0.042,
+# de modo que convergen sin cruzarse. La contradiccion estaba con la tabla contigua.
+_p = d[(d.dt <= 0.02) & (d.T_pred <= 1.5)].pivot_table(
+    index="T_pred", columns="terminal", values="fell_frac", aggfunc="mean")
+_b = (_p["stage"] - _p["riccati"]).round(3)
+chk("brecha en el horizonte mas corto", 0.615, float(_b.iloc[0]), tol=0.002)
+chk("brecha en el horizonte mas largo", 0.042, float(_b.iloc[-1]), tol=0.002)
+chk("la brecha se estrecha, no se ensancha", 1.0, float(_b.iloc[0] > _b.iloc[-1]), tol=0)
+chk("riccati por debajo en todos los horizontes", 1.0, float((_b > 0).all()), tol=0)
+
+
+print()
+print("=" * 96)
+print("I. NEUTRALIDAD DE LA RESTRICCION DE CARRO")
+print("=" * 96)
+# El texto decia trayectorias "numericamente identicas". A 4 V coinciden a cinco
+# cifras, pero a 6 V solo a tres, asi que la afirmacion se acoto al dato.
+_rc = pd.read_csv(PR / "rail_correct.csv")
+for _dv, _cif in ((4.0, 5), (6.0, 3)):
+    _s = _rc[(_rc.dv == _dv) & (_rc.method == "MPC") & (_rc.L_design.isin(["0.4", "0.6", "sin"]))]
+    _d = np.ptp(_s.rmse_theta.values) / _s.rmse_theta.mean()
+    chk(f"dv={_dv:.0f}, limites 0.4/0.6/sin coinciden a {_cif} cifras",
+        _cif, float(np.floor(-np.log10(_d))), tol=0.5)
+chk("a 4 V y 6 V nadie viola el riel", 0.0, _rc[_rc.dv <= 6].rail_viol_frac.max(), tol=0)
+chk("a 8 V todos violan el riel", 1.0, _rc[_rc.dv == 8].rail_viol_frac.min(), tol=0)
+chk("a 8 V nadie pierde el pendulo", 0.0, _rc[_rc.dv == 8].fell_frac.max(), tol=0)
+
+
+print()
+print("=" * 96)
 print(f"RESUMEN PASADA 1   {len(OK)} verificadas   {len(MAL)} discrepancias")
 print("=" * 96)
 for n, det in MAL:

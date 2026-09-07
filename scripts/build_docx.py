@@ -48,7 +48,9 @@ FIGURAS = {
     3: ("fig3_map_stage.png",
         "Design space with the stage terminal weight, on the same scale as Figure 2."),
     4: ("fig4_rl_fragility.png",
-        "Fragility of learned control across configuration, seeds and the training boundary."),
+        ("Fragility of learned control across configuration, seeds and the training "
+        "boundary. Evaluation return is a sum of negated stage costs, so it is bounded "
+        "above by zero and a value nearer zero is better.")),
     5: ("fig5_tails.png",
         "Distribution of angular error by controller family across the training boundary."),
     6: ("fig6_timeseries.png",
@@ -69,8 +71,16 @@ def main() -> int:
     t = SRC.read_text(encoding="utf-8")
 
     # ---- ecuaciones. \tag{n} -> tabla sin bordes con el numero a la derecha ----
+    # El microespaciado de LaTeX (\, \; \: \! \quad \qquad y \ ) se convierte en
+    # corridas OMML que solo contienen un espacio, y Word las dibuja como el
+    # recuadro vacio del marcador de posicion. Se quita del cuerpo de cada
+    # ecuacion antes de pasar por pandoc. Es puramente tipografico y OMML aplica
+    # su propio espaciado entre simbolos.
+    ESPACIO_TIPOGRAFICO = re.compile(r"\\[,;:!]|\\q?quad\b|\\(?=\s)")
+
     def eq(m):
         cuerpo, n = m.group(1).strip(), m.group(2)
+        cuerpo = ESPACIO_TIPOGRAFICO.sub(" ", cuerpo)
         return (f"\n|  |  |\n|:--:|--:|\n| ${cuerpo}$ | ({n}) |\n")
     t, n_eq = re.subn(r"\$\$\s*(.*?)\s*\\tag\{(\d+)\}\s*\$\$", eq, t, flags=re.S)
 

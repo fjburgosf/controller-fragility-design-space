@@ -62,7 +62,7 @@ a.set_ylim(-0.05, 1.08); a.grid(alpha=0.3); a.legend(fontsize=7.5); a.tick_param
 
 # ---- (c) condicionamiento ----
 a = ax[2]
-med = {0.4: 6.519e2, 0.8: 3.616e4, 1.5: 2.539e7, 3.0: 2.745e13}
+med = pd.read_csv(PR / "mpc_conditioning.csv").set_index("T_pred").cond_H.to_dict()
 T = np.linspace(0.3, 3.2, 120)
 a.semilogy(T, np.exp(2 * LAM * T) * 1.6e2, color=GRIS, lw=1.8,
            label=r"$\propto e^{2\lambda_u T_{pred}}$")

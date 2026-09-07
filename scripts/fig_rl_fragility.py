@@ -35,7 +35,7 @@ for k, (algo, c) in enumerate((("sac", AZUL), ("ddpg", NARANJA))):
 a.set_xticks(range(len(h[h.algo == 'sac'])))
 a.set_xticklabels([f"c{i+1}" for i in range(len(h[h.algo == 'sac']))], fontsize=7.5)
 a.set_xlabel("hyperparameter configuration, ranked", fontsize=9)
-a.set_ylabel("evaluation return", fontsize=9)
+a.set_ylabel("evaluation return  (0 or below, higher is better)", fontsize=8.5)
 a.set_title("(a) configuration sensitivity of the\nlearned controllers", fontsize=9)
 a.legend(fontsize=8, loc="lower left"); a.grid(axis="y", alpha=0.3)
 a.tick_params(labelsize=8)
@@ -60,7 +60,7 @@ for algo, (c, best, final) in datos.items():
            color=c, weight="bold", transform=a.get_xaxis_transform())
     etiq += [pos, pos + 0.32]; pos += 1.0
 a.set_xticks(etiq); a.set_xticklabels(["best", "final"] * len(datos), fontsize=7.5)
-a.set_ylabel("evaluation return", fontsize=9)
+a.set_ylabel("evaluation return  (0 or below, higher is better)", fontsize=8.5)
 a.set_title("(b) seed variability, and why the\ncheckpoint criterion matters", fontsize=9)
 a.grid(axis="y", alpha=0.3); a.tick_params(labelsize=8)
 a.legend(fontsize=7.5, loc="lower center", ncol=2, framealpha=0.95, borderpad=0.4)

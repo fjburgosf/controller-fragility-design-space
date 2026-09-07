@@ -157,7 +157,7 @@ chk("declaracion de IA generativa presente",
 # cada entrada admite variantes, porque el manuscrito escribe algunas
 # proporciones en palabras y no en decimales
 CIFRAS = [["0.725"], ["4.596"], ["224"], ["25", "Twenty five"], ["0.052"], ["0.368"],
-          ["ninety six"], ["2.7"], ["11.378"], ["minus 8.2"], ["minus 21.2"],
+          ["ninety six"], ["1.1 times ten to the thirteenth"], ["11.378"], ["minus 8.2"], ["minus 21.2"],
           ["0.91", "91 percent"], ["0.33", "33 percent"]]
 faltan = [v[0] for v in CIFRAS if not any(x in SRC for x in v)]
 chk("cifras clave presentes en el texto", not faltan, "todas" if not faltan else f"faltan {faltan}")

@@ -144,6 +144,11 @@ chk("los numeros de ecuacion sobreviven, sin saltos", nums_eq == list(range(1, n
     f"numeros hallados {nums_eq}")
 chk("ninguna variable quedo como texto entre dolares", "$" not in TEXTO,
     "ninguna" if "$" not in TEXTO else f"{TEXTO.count('$')} apariciones")
+# Word dibuja como recuadro de marcador de posicion cualquier corrida OMML que
+# solo contenga un espacio o este vacia. Es lo que producen \, \; \quad y \ .
+_omml_boxes = re.findall(r"<m:t/>|<m:t>\s*</m:t>", xml)
+chk("ninguna ecuacion tiene recuadro vacio (run OMML solo-espacio)", not _omml_boxes,
+    "ninguno" if not _omml_boxes else f"{len(_omml_boxes)} corridas vacias")
 
 print()
 print("=" * 100)
@@ -183,7 +188,7 @@ pal_doc = len(limpia(TEXTO).split())
 chk("el docx no perdio texto de la fuente", pal_doc >= pal_src * 0.95,
     f"fuente {pal_src} palabras, docx {pal_doc}")
 PLANO = re.sub(r"\s+", " ", TEXTO)
-for frase in ("ninety six configurations satisfying the horizon",
+for frase in ("ninety six configurations that satisfy the horizon rule",
               "twenty five violating both rules survived every realisation",
               "11.378 ms in its slowest step",
               "2.079 m, about seven times that half length",
