@@ -117,12 +117,12 @@ def main() -> int:
         # en Word no saltan a ninguna parte. La forma []{#ref1} produce un marcador
         # llamado exactamente ref1.
         lineas = [f'[]{{#ref{num[d]}}}{ieee(refs[d], num[d])}' for d in orden]
-        cabecera = "Referencias numeradas por orden de aparicion en el texto."
+        cabecera = ""
     else:
         alfab = sorted(orden, key=lambda d: (apellido(refs[d]["authors"][0]) if refs[d]["authors"] else "",
                                              refs[d]["year"]))
         lineas = [apa(refs[d]) for d in alfab]
-        cabecera = "Referencias en orden alfabetico."
+        cabecera = ""
 
     marca = "[PENDIENTE DE GENERACIÓN AUTOMÁTICA."
     if marca in cuerpo:

@@ -30,6 +30,26 @@ TMP = ROOT / "paper" / "_manuscrito_docx.md"
 import os
 OUT = ROOT / "paper" / os.environ.get("P2_DOCX", "P2_manuscrito.docx")
 
+# Tecnura pide que cada figura y cada tabla lleven una nota de fuente y una nota
+# que explique las abreviaturas. Todo el material es original, generado por el
+# codigo de este trabajo, asi que la fuente es siempre la misma.
+FUENTE = "Source: prepared by the authors."
+# nota compacta: las siglas de controlador se definen en la Seccion 2, aqui solo
+# se recuerdan, y se anaden los simbolos que aparecen en los ejes y encabezados
+ABREV = ("LQR, MPC, SAC and DDPG are the controller families of Section 2; "
+         "$T_s$ sampling period, $T_{pred}$ prediction horizon, $d_v$ sustained "
+         "input disturbance.")
+
+
+def nota(leyenda, abrev=True):
+    """Cierra una leyenda con la nota de abreviaturas y la de fuente."""
+    partes = [leyenda.rstrip()]
+    if abrev:
+        partes.append(ABREV)
+    partes.append(FUENTE)
+    return " ".join(partes)
+
+
 # tabla del manuscrito -> archivo generado, y su leyenda
 TABLAS = {
     1: ("p2_tabla1_planta", "Plant parameters and closed loop modal structure."),
@@ -93,7 +113,10 @@ def main() -> int:
                   if not x.group(0).lstrip().startswith("**Table")), None)
         if not m:
             print(f"  aviso, Table {num} no se cita"); continue
-        bloque = f"\n\n**Table {num}.** {leyenda}\n\n{cuerpo_tabla(slug)}\n"
+        # nota de abreviaturas solo en las tablas que las usan (2, 3, 5, 6)
+        usa_abrev = num in (2, 3, 5, 6)
+        bloque = (f"\n\n**Table {num}.** {leyenda}\n\n{cuerpo_tabla(slug)}\n\n"
+                  f"*Note.* {ABREV + ' ' if usa_abrev else ''}{FUENTE}\n")
         fin = m.end()
         while fin < len(t) and t[fin:fin + 2] != "\n\n":
             fin += 1
@@ -112,9 +135,16 @@ def main() -> int:
         fin = m.end()
         while fin < len(t) and t[fin:fin + 2] != "\n\n":
             fin += 1
-        t = t[:fin] + f"\n\n![**Figure {num}.** {leyenda}](../figures/P2/{arch})\n" + t[fin:]
+        # todas las figuras usan siglas de controlador, asi que todas llevan la nota
+        cap = f"**Figure {num}.** {leyenda} {ABREV} {FUENTE}"
+        t = t[:fin] + f"\n\n![{cap}](../figures/P2/{arch})\n" + t[fin:]
         n_fig += 1
 
+    # pandoc emitiria el title del bloque YAML ademas del H1, duplicando el
+    # titulo en el docx. Se retira el frontmatter y se deja solo el H1 y el
+    # subtitulo en español que vienen en el cuerpo.
+    if t.startswith("---\n"):
+        t = t.split("\n---\n", 1)[1].lstrip("\n")
     TMP.write_text(t, encoding="utf-8")
     cmd = [str(PANDOC), str(TMP), "-o", str(OUT),
            "--from", "markdown+tex_math_dollars+pipe_tables+yaml_metadata_block+raw_html",

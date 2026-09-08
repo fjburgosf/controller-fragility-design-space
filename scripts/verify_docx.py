@@ -69,10 +69,12 @@ print()
 print("=" * 100)
 print("2. SECCIONES, EN ORDEN")
 print("=" * 100)
+# La declaracion de IA debe ser el ultimo apartado antes de References, que es
+# como lo exige Tecnura.
 ENCABEZADOS = ["Abstract", "Resumen", "1. Introduction", "2. Methodology", "3. Results",
                "4. Discussion", "5. Conclusions", "Acknowledgements", "Data availability",
-               "Declaration on the use of generative artificial intelligence",
-               "Conflict of interest", "Funding", "CRediT author statement", "References"]
+               "Conflict of interest", "Funding", "CRediT author statement",
+               "Declaration on the use of generative artificial intelligence", "References"]
 pos, desordenados, ausentes = -1, [], []
 for h in ENCABEZADOS:
     idx = next((i for i, p in enumerate(PARRAFOS)
