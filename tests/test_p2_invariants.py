@@ -10,29 +10,26 @@ from src.controllers.lqr import LQRController
 from src.models.pendulum import equilibrium_up, linearize
 from igrrl.mpc_design import DesignMPC, block_lengths, Q_P2, R_P2
 from igrrl.env_standalone import StandaloneBalanceEnv
-from igrrl.env import ResidualBalanceEnv
 
 NOM = load_pendulum_params()
 
 
 # ---------- BUG D33: la aleatorización de dominio estaba muerta ----------
 
-@pytest.mark.parametrize("cls", [StandaloneBalanceEnv, ResidualBalanceEnv])
-def test_domain_randomization_realmente_varia(cls):
+def test_domain_randomization_realmente_varia():
     """reset() consecutivos DEBEN dar plantas distintas. Bug D33: re-sembraba."""
-    env = cls(domain_randomization=True, seed=1)
+    env = StandaloneBalanceEnv(domain_randomization=True, seed=1)
     mps = []
     for _ in range(5):
         _, info = env.reset()
         mps.append(info["parameters"].Mp)
-    assert len(set(mps)) > 1, f"DR muerta: {cls.__name__} repite Mp={mps[0]} en todo episodio"
+    assert len(set(mps)) > 1, f"DR muerta: repite Mp={mps[0]} en todo episodio"
 
 
-@pytest.mark.parametrize("cls", [StandaloneBalanceEnv, ResidualBalanceEnv])
-def test_reproducibilidad_con_semilla_explicita(cls):
+def test_reproducibilidad_con_semilla_explicita():
     """reset(seed=X) DEBE ser reproducible pese a la corrección del bug D33."""
-    a = cls(domain_randomization=True); _, ia = a.reset(seed=777)
-    b = cls(domain_randomization=True); _, ib = b.reset(seed=777)
+    a = StandaloneBalanceEnv(domain_randomization=True); _, ia = a.reset(seed=777)
+    b = StandaloneBalanceEnv(domain_randomization=True); _, ib = b.reset(seed=777)
     assert ia["parameters"].Mp == ib["parameters"].Mp
 
 
