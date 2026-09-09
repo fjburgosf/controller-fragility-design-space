@@ -128,7 +128,7 @@ The same $Q$, $R$ are reused as the MPC stage cost, so the two designs are
 cost matched.
 
 $$
-Q = \operatorname{diag}(1.0,\ 12.0,\ 0.05,\ 0.02),
+Q = \mathrm{diag}(1.0,\ 12.0,\ 0.05,\ 0.02),
 \qquad R = 0.002.
 $$
 
@@ -148,7 +148,7 @@ $$
 x_{k+1} = A_d x_k + B_d u_k,\ \ |u_k| \le 12\ \text{V},
 $$
 
-with $N_p = \operatorname{round}(T_{\text{pred}}/T_s)$, $N_c = 20$ free moves, and
+with $N_p = \mathrm{round}(T_{\text{pred}}/T_s)$, $N_c = 20$ free moves, and
 an index map $u_k = v_{b(k)}$.
 
 * **Block distribution.** `uniform` splits the horizon into equal blocks;
@@ -175,16 +175,16 @@ Output feedback from $(x_c, \theta)$; no controller sees the true state. Joseph
 form update. Covariances:
 
 $$
-Q_{\text{EKF}} = \operatorname{diag}(10^{-9}, 10^{-9}, 10^{-8}, 10^{-8}),
+Q_{\text{EKF}} = \mathrm{diag}(10^{-9}, 10^{-9}, 10^{-8}, 10^{-8}),
 \qquad
-R_{\text{EKF}} = \operatorname{diag}(10^{-6}, 10^{-6}),
+R_{\text{EKF}} = \mathrm{diag}(10^{-6}, 10^{-6}),
 \qquad
 P_0 = 10^{-3}\, I_4 .
 $$
 
 $R_{\text{EKF}}$ matches the measurement noise variance ($\sigma_{\text{meas}} =
 10^{-3}$ on both channels) used by the evaluation harness. `src/estimators/ekf.py`
-ships a different default $R = \operatorname{diag}(10^{-8}, 10^{-6})$; the P2
+ships a different default $R = \mathrm{diag}(10^{-8}, 10^{-6})$; the P2
 harness overrides it with the value above. Source: `src/estimators/ekf.py`,
 `src/igrrl/evaluate_common.py`.
 
@@ -194,9 +194,9 @@ Stable-Baselines3, environment `src/igrrl/env_standalone.py`
 (`StandaloneBalanceEnv`), stabilisation only.
 
 * **Observation (5).** $[\,x_c,\ \sin\theta_e,\ \cos\theta_e,\ \dot{x}_c,\ \dot\theta\,]$
-  with $\theta_e = \operatorname{wrap}(\theta - \pi)$, from the EKF estimate.
+  with $\theta_e = \mathrm{wrap}(\theta - \pi)$, from the EKF estimate.
 * **Action (1).** $a \in [-1, 1]$, mapped linearly to the full actuator range,
-  $u = 12 \cdot \operatorname{clip}(a, -1, 1)$ V.
+  $u = 12 \cdot \mathrm{clip}(a, -1, 1)$ V.
 * **Reward.**
   $r = -\bigl( 12\,\theta_e^2 + 1.0\, x_c^2 + 0.05\, \dot{x}_c^2 + 0.02\, \dot\theta^2 + 0.002\, u^2 \bigr)$,
   i.e. the negated LQR stage cost on the realised state and action, with an
