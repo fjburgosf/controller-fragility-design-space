@@ -1,0 +1,87 @@
+# Configuración centralizada del proyecto "IP Robust RL Montecarlo"
+# Toda ejecución (benchmark, perturbaciones, incertidumbre, Monte Carlo,
+# sensibilidad, RL) debe leer los parámetros desde este archivo.
+# No duplicar valores en otros scripts.
+#
+# Fuente de verdad de la física: docs/CANONICAL_MODEL.md
+# Fuente de verdad de la auditoría: AUDIT_REPORT.md
+
+physical_parameters:
+  # Motor DC
+  r: 0.02075          # [m] radio de la polea del motor
+  Jm: 8.458354293e-9  # [kg*m^2] inercia del rotor del motor
+  Rm: 4.3              # [Ohm] resistencia de armadura
+  kt: 0.219848705       # [N*m/A] = [V*s/rad] constante de par / FEM (kt = kb)
+
+  # Carrito
+  M_c: 0.190           # [kg] masa del carrito
+  c: 0.7                # [N*s/m] fricción viscosa del carrito
+
+  # Péndulo
+  Mp: 0.097             # [kg] masa del péndulo
+  Jp: 0.00517333         # [kg*m^2] inercia del péndulo respecto al pivote
+  l: 0.2                  # [m] distancia pivote - centro de masa
+  b: 0.00007892            # [N*m*s/rad] fricción viscosa del pivote
+
+  # Ambiente
+  g: 9.81                   # [m/s^2] gravedad
+
+  # Derivados (calculados en código, documentados aquí por trazabilidad)
+  # Mt    = M_c + Jm / r^2
+  # alpha = Jp*(Mt+Mp) + Mt*Mp*l^2
+
+# Convención angular del proyecto (decisión explícita, ver docs/CANONICAL_MODEL.md):
+#   theta = 0   -> péndulo hacia abajo (equilibrio estable en lazo abierto)
+#   theta = pi  -> péndulo hacia arriba (equilibrio inestable, punto de operación de control)
+convention:
+  theta_zero: "down"
+  control_equilibrium_theta: 3.141592653589793  # pi
+  state_order: ["x", "theta", "xdot", "thetadot"]
+  input: "Va (voltage, V)"
+  measured_outputs: ["x", "theta"]
+
+actuator_limits:
+  u_min: -12.0   # [V]
+  u_max: 12.0    # [V]
+
+simulation:
+  integrator: "rk4"
+  dt: 0.005        # [s] paso de integración, a definir/justificar en la fase de benchmark nominal
+  t_final: 10.0     # [s] duración por defecto de una simulación de evaluación
+
+initial_conditions:
+  nominal:
+    x: 0.0
+    theta: 3.141592653589793      # pi -> arranca exactamente en el equilibrio invertido
+    xdot: 0.0
+    thetadot: 0.0
+  # perturbaciones iniciales especificas se definen en el modulo de experimentos de perturbaciones
+
+reference:
+  x_ref: 0.0        # [m] referencia nominal de posicion del carrito
+  theta_ref: 3.141592653589793  # pi -> pendulo arriba
+
+seeds:
+  global_seed: 0
+  rl_seeds: [1, 2, 3, 4, 5]   # minimo 5 semillas para RL
+
+# -----------------------------------------------------------------------------
+# Incertidumbre parametrica. Rango relativo por parametro,
+# NO uniforme: justificado por como se conoce cada parametro en la practica.
+# Se usa en: analisis de sensibilidad (scripts/sensitivity_analysis.py),
+# domain randomization del residuo de B9, y Monte Carlo (MC1/MC2/MC3).
+uncertainty:
+  distribution: "uniform"          # U(nominal*(1-delta), nominal*(1+delta))
+  relative_ranges:                 # delta por parametro
+    M_c:  0.15   # masa carrito: pieza mecanizada, conocida razonablemente
+    Mp:   0.20   # masa pendulo: cableado de sensor / fijaciones añaden masa incierta
+    l:    0.15   # pivote-CdM: geometrico, bastante conocido
+    Jp:   0.25   # inercia pendulo: dificil de medir directamente
+    c:    0.40   # friccion carrito: muy variable (temperatura, desgaste, lubricacion)
+    b:    0.50   # friccion pivote: diminuta y muy mal conocida
+    Rm:   0.15   # resistencia armadura: ~0.4%/°C en cobre -> ~12% con 30°C
+    kt:   0.10   # constante de par: envejecimiento de iman, temperatura
+    r:    0.05   # radio polea: mecanizado, bien conocido
+
+# Las secciones de controladores, observadores, Monte Carlo, ruido,
+# perturbaciones y RL se completan en fases posteriores del proyecto.
